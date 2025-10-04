@@ -11,7 +11,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 
-class Ui_MainWindow(object):
+class Ui_MainWindow(object):        
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(921, 465)
@@ -122,6 +122,8 @@ class Ui_MainWindow(object):
         self.actionFilter_panel.setChecked(True)
         self.actionFilter_panel.setPriority(QtWidgets.QAction.NormalPriority)
         self.actionFilter_panel.setObjectName("actionFilter_panel")
+        self.menuLanguage = QtWidgets.QMenu(MainWindow)
+        self.menuLanguage.setObjectName("menuLanguage")
         self.actionRename = QtWidgets.QAction(MainWindow)
         icon2 = QtGui.QIcon()
         icon2.addPixmap(QtGui.QPixmap(":/toolbar/swap-horizontal-bold.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -177,6 +179,7 @@ class Ui_MainWindow(object):
         self.menuEdit.addAction(self.actionRemove_all)
         self.menuView.addAction(self.actionViewInfo_panel)
         self.menuView.addAction(self.actionFilter_panel)
+        self.menuView.addMenu(self.menuLanguage)
         self.menuHelp.addAction(self.actionHelp)
         self.menuHelp.addAction(self.actionForum)
         self.menuHelp.addSeparator()
@@ -259,6 +262,21 @@ class Ui_MainWindow(object):
         self.actionRemove_all.setShortcut(_translate("MainWindow", "Shift+Del"))
         self.actionOpen.setText(_translate("MainWindow", "Open"))
         self.actionOpen.setShortcut(_translate("MainWindow", "Ctrl+Return"))
+        self.menuLanguage.setTitle(_translate("MainWindow", "Language"))
+        
+    def setUpLanguageManu(self, MainWindow, language_map: dict[str, str], current_locale: str):
+        language_group = QtWidgets.QActionGroup(MainWindow)
+        language_group.setExclusive(True)
+
+        for label, code in language_map.items():
+            action = self.menuLanguage.addAction(label)
+            action.setCheckable(True)
+            if code == current_locale:
+                action.setChecked(True)
+            language_group.addAction(action)
+
+        language_group.triggered.connect(MainWindow.onChangeLanguage)
+
 from .bookinfopanel import BookInfoPanel
 from .booktableview import BookTableView
 from .customcontrols import ButtonLineEdit

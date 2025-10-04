@@ -1,6 +1,7 @@
 from functools import partial
 import os
 import sys
+from typing import TYPE_CHECKING
 import webbrowser
 import traceback
 import subprocess
@@ -8,7 +9,7 @@ import subprocess
 from showinfm import show_in_file_manager
 
 from PyQt5.QtWidgets import QMainWindow, QFileDialog, QMessageBox, QApplication, QMenu, QAction, QWidget
-from PyQt5.QtCore import Qt, QPoint, QCoreApplication, QTimer, QEvent
+from PyQt5.QtCore import Qt, QPoint, QCoreApplication, QTimer, QEvent, QTranslator
 from PyQt5.QtGui import QIcon, QKeySequence
 
 from .mainwindow_ui import Ui_MainWindow
@@ -28,6 +29,9 @@ import database
 from plugin_collection import PluginCollection, MetaPlugin, FilePlugin
 from .pluginform import PluginForm
 
+if TYPE_CHECKING:
+    from PyQt5 import QtWidgets
+
 settings = config.settings
 
 _t = QCoreApplication.translate
@@ -46,9 +50,12 @@ class MainWindow (QMainWindow, Ui_MainWindow):
         self.isAutoApplyFilter = True
         self.actionsEnabled = False
         self.actionOpenEnabled = False
+        self.app_translator = QTranslator()
+        self.qt_translator = QTranslator()
 
         super(MainWindow, self).__init__()
         self.setupUi(self)
+        self.setUpLocale()
 
         self.setWindowIcon(QIcon(':/icons/libro2_48px.png'))
 
@@ -632,6 +639,37 @@ class MainWindow (QMainWindow, Ui_MainWindow):
     def onAboutQt(self):
         QMessageBox.aboutQt(self)
 
+    def setUpLocale(self):
+        self.language_map = {
+            "English": "en_US",
+            "Русский": "ru_RU",
+        }
+        current_locale = settings.ui_locale or config.locale
+        self.setUpLanguageManu(self, self.language_map, current_locale)
+        self.setLanguage(current_locale)
+        
+    def onChangeLanguage(self, action: "QtWidgets.QAction"):
+        language = self.language_map.get(action.text(), "en_US")
+        self.setLanguage(language)
+        self.reloadPlugins()
+        
+    def setLanguage(self, language: str):
+        config.locale = language
+        app = QApplication.instance()
+
+        app.removeTranslator(self.app_translator)
+        app.removeTranslator(self.qt_translator)
+
+        locale_path = config.locale_dir_path
+        app_locale = os.path.join(locale_path, 'libro2_' + language + '.qm')
+        qt_locale = os.path.join(locale_path, 'qtbase_' + language + '.qm')
+        self.app_translator.load(app_locale)
+        self.qt_translator.load(qt_locale)
+
+        app.installTranslator(self.app_translator)
+        app.installTranslator(self.qt_translator)
+        self.retranslateUi(self)
+
     def closeEvent(self, e):
         self.exitApp()
 
@@ -650,6 +688,7 @@ class MainWindow (QMainWindow, Ui_MainWindow):
         settings.ui_columns_width = self.bookList.getColumnsWidth()
         settings.ui_hidden_columns = self.bookList.getHiddenColumns()
         settings.ui_hidden_columns_width = self.bookList.getHiddenColumnsWidth()
+        settings.ui_locale = config.locale
 
         if self.actionViewInfo_panel.isChecked():
             settings.ui_splitter_sizes = self.splitter.sizes()

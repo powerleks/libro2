@@ -37,6 +37,7 @@ config_file = os.path.join(config_path, 'settings.json')
 plugins_path = os.path.join(config_path, 'plugins')
 database_name = os.path.join(temp_dir, 'libro2.db')
 locale = None
+locale_dir_path = os.path.join(app_path, 'locale')
 
 settings = SimpleNamespace(
     add_folder_last_selected=os.path.expanduser('~'),
@@ -55,6 +56,7 @@ settings = SimpleNamespace(
     ui_hidden_columns=[],
     ui_hidden_columns_width=[],
     ui_dialog_size={},
+    ui_locale=None,
     is_open_folder_on_start=False,
     open_folder_on_start=None,
     reader_app_fb2=None,
